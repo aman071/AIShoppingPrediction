@@ -4,7 +4,6 @@ import pandas as pd
 
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import confusion_matrix
 
 TEST_SIZE = 0.4
 
@@ -111,9 +110,23 @@ def evaluate(labels, predictions):
     representing the "true negative rate": the proportion of
     actual negative labels that were accurately identified.
     """
-    matrix=confusion_matrix(labels, predictions)
-    sensitivity=float(matrix[0,0] / (matrix[0,0] + matrix[0,1]))
-    specificity=float(matrix[1,1] / (matrix[1,0] + matrix[1,1]))
+    se=0
+    sp=0
+    p=0
+    n=0
+    for label, pred in zip(labels, predictions):
+        if label==1:
+            p+=1
+            if label==pred:
+                se+=1
+
+        else:
+            n+=1
+            if label==pred:
+                sp+=1
+
+    sensitivity=se/p
+    specificity=sp/n
 
     return (sensitivity, specificity)
 
