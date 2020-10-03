@@ -1,11 +1,12 @@
 import csv
 import sys
+import pandas as pd
 
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix
 
 TEST_SIZE = 0.4
-
 
 def main():
 
@@ -59,7 +60,29 @@ def load_data(filename):
     labels should be the corresponding list of labels, where each label
     is 1 if Revenue is true, and 0 otherwise.
     """
-    raise NotImplementedError
+    df=pd.read_csv(filename)
+
+    months={'Jan': 0, 'Feb': 1, 'Mar': 2,'Apr': 3, 'May': 4, 'June': 5, 'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11}
+    visitors={'New_Visitor': 0, 'Returning_Visitor': 1, 'Other': 0}
+    convert_dict={'Administrative_Duration': float, 'Informational_Duration': float, 'ProductRelated_Duration': float, 'BounceRates': float, 'ExitRates': float, 'PageValues': float, 'SpecialDay': float}
+
+    df['Weekend']=df['Weekend']*1
+    df.replace({'Month': months, 'VisitorType': visitors}, inplace=True)
+    df=df.astype(convert_dict) 
+
+    label_df=df['Revenue']*1
+    evidence_df=df.drop('Revenue', inplace=False, axis=1)
+
+    evidence=list()
+    for i, rows in evidence_df.iterrows():
+        row_list=[rows.Administrative, rows.Administrative_Duration, rows.Informational, rows.Informational_Duration, rows.ProductRelated, rows.ProductRelated_Duration, 
+        rows.BounceRates, rows.ExitRates, rows.PageValues, rows.SpecialDay, rows.Month, rows.OperatingSystems, rows.Browser, rows.Region, rows.TrafficType, rows.VisitorType, rows.Weekend] 
+
+        evidence.append(row_list)
+
+    labels=label_df.tolist()
+
+    return evidence, labels
 
 
 def train_model(evidence, labels):
@@ -67,7 +90,10 @@ def train_model(evidence, labels):
     Given a list of evidence lists and a list of labels, return a
     fitted k-nearest neighbor model (k=1) trained on the data.
     """
-    raise NotImplementedError
+    KNN = KNeighborsClassifier(n_neighbors=1)
+    KNN.fit(evidence,labels)
+
+    return KNN
 
 
 def evaluate(labels, predictions):
@@ -85,7 +111,11 @@ def evaluate(labels, predictions):
     representing the "true negative rate": the proportion of
     actual negative labels that were accurately identified.
     """
-    raise NotImplementedError
+    matrix=confusion_matrix(labels, predictions)
+    sensitivity=float(matrix[0,0] / (matrix[0,0] + matrix[0,1]))
+    specificity=float(matrix[1,1] / (matrix[1,0] + matrix[1,1]))
+
+    return (sensitivity, specificity)
 
 
 if __name__ == "__main__":
